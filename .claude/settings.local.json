@@ -3,7 +3,14 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(md-tree explode:*)",
-      "Bash(pnpm install:*)"
+      "Bash(pnpm install:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm rebuild:*)",
+      "Bash(pnpm build:*)",
+      "Bash(DATABASE_URL=\"postgresql://simpleconf:simpleconf@localhost:5432/simpleconf\" pnpm db:generate:*)",
+      "Bash(pnpm tsc:*)",
+      "Bash(pnpm lint:*)"
     ]
   }
 }
