@@ -4,6 +4,8 @@ import { registerEnv } from './config/env.js';
 import databasePlugin from './plugins/database.js';
 import jwtPlugin from './plugins/jwt.js';
 import { authRoutes } from './modules/auth/index.js';
+import { foldersRoutes } from './modules/folders/index.js';
+import { documentsRoutes } from './modules/documents/index.js';
 import type { HealthResponse } from '@simpleconf/shared';
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -41,6 +43,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register API routes
   await app.register(authRoutes, { prefix: '/api' });
+  await app.register(foldersRoutes, { prefix: '/api' });
+  await app.register(documentsRoutes, { prefix: '/api' });
 
   // Health check endpoint
   app.get<{ Reply: HealthResponse }>('/health', async (_request, _reply) => {

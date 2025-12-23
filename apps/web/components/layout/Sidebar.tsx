@@ -1,33 +1,12 @@
 "use client"
 
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useEffect, useState, useCallback } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { ChevronLeft, ChevronRight, Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { FolderTree } from "@/components/folder/FolderTree"
-
-// Mock data
-const folderTree = [
-  {
-    id: "sales",
-    name: "Sales",
-    count: 24,
-    isAccessible: true,
-    children: [
-      { id: "pg", name: "Payment Gateways", count: 7, isAccessible: true },
-      { id: "merchants", name: "Merchant Accounts", count: 5, isAccessible: true },
-    ],
-  },
-  {
-    id: "eng",
-    name: "Engineering",
-    count: 45,
-    isAccessible: true,
-    children: [
-      { id: "frontend", name: "Frontend", count: 18, isAccessible: true },
-      { id: "backend", name: "Backend", count: 27, isAccessible: true },
-    ],
-  },
-  { id: "hr", name: "HR", count: 12, isAccessible: false, children: [] },
-]
+import { folderService } from "@/lib/api/services/folders"
+import type { FolderTreeNode } from "@simpleconf/shared"
 
 interface SidebarProps {
   isCollapsed: boolean
@@ -35,6 +14,80 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const currentFolderId = searchParams.get("id") || undefined
+
+  const [folders, setFolders] = useState<FolderTreeNode[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchFolders = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await folderService.getFolderTree()
+      setFolders(response.folders)
+    } catch (err) {
+      setError("Failed to load folders")
+      console.error("Failed to fetch folder tree:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchFolders()
+  }, [fetchFolders])
+
+  const handleFolderSelect = (folderId: string) => {
+    router.push(`/folder?id=${folderId}`)
+  }
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+          <AlertCircle className="h-6 w-6 text-red-500" />
+          <p className="text-sm text-slate-500">{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchFolders}
+            className="gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry
+          </Button>
+        </div>
+      )
+    }
+
+    if (folders.length === 0) {
+      return (
+        <div className="text-center py-8 text-sm text-slate-500">
+          No folders found
+        </div>
+      )
+    }
+
+    return (
+      <FolderTree
+        folders={folders}
+        currentFolderId={currentFolderId}
+        onFolderSelect={handleFolderSelect}
+      />
+    )
+  }
+
   return (
     <aside
       className={`border-r bg-slate-50 transition-all duration-200 shrink-0 ${isCollapsed ? "w-16" : "w-[280px]"}`}
@@ -54,7 +107,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
 
         <div className="flex-1 p-4 overflow-y-auto">
-          {!isCollapsed && <FolderTree folders={folderTree} currentFolderId="pg" />}
+          {!isCollapsed && renderContent()}
         </div>
       </div>
     </aside>

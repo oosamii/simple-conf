@@ -7,6 +7,7 @@ import { SearchResultCard } from "@/components/search/SearchResultCard"
 import { ExternalResultCard } from "@/components/search/ExternalResultCard"
 import { SearchResultsSkeleton } from "@/components/search/SearchResultsSkeleton"
 import { SearchX } from "lucide-react"
+import { ProtectedRoute } from "@/lib/components/protected-route"
 
 const searchResults = [
   {
@@ -69,58 +70,60 @@ export default function SearchResultsPage() {
   const hasResults = searchResults.length > 0
 
   return (
-    <div className="space-y-6">
-      {/* Results Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-2xl font-semibold">
-          {hasResults ? (
-            <>
-              {resultsCount} result{resultsCount !== 1 ? "s" : ""} for <span className="text-primary">'{query}'</span>
-            </>
-          ) : (
-            <>
-              No results for <span className="text-primary">'{query}'</span>
-            </>
-          )}
-        </h1>
+    <ProtectedRoute>
+      <div className="space-y-6">
+        {/* Results Header */}
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h1 className="text-2xl font-semibold">
+            {hasResults ? (
+              <>
+                {resultsCount} result{resultsCount !== 1 ? "s" : ""} for <span className="text-primary">'{query}'</span>
+              </>
+            ) : (
+              <>
+                No results for <span className="text-primary">'{query}'</span>
+              </>
+            )}
+          </h1>
 
-        <div className="flex items-center gap-3">
-          <Label htmlFor="search-mode" className="text-sm text-slate-600">
-            Internal only
-          </Label>
-          <Switch id="search-mode" checked={searchEverywhere} onCheckedChange={setSearchEverywhere} />
-          <Label htmlFor="search-mode" className="text-sm text-slate-600">
-            Search everywhere
-          </Label>
-        </div>
-      </div>
-
-      {/* Internal Results */}
-      {hasResults ? (
-        <div className="space-y-4">
-          {searchResults.map((result) => (
-            <SearchResultCard key={result.id} result={result} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <SearchX className="w-16 h-16 text-slate-300 mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">No results found for '{query}'</h2>
-          <p className="text-slate-500 mb-4">Try different keywords or search everywhere for external resources</p>
-        </div>
-      )}
-
-      {/* External Results Section */}
-      {searchEverywhere && externalResults.length > 0 && (
-        <div className="space-y-4 pt-8 border-t">
-          <h2 className="text-xl font-semibold text-slate-900">External Resources</h2>
-          <div className="space-y-3">
-            {externalResults.map((result) => (
-              <ExternalResultCard key={result.id} result={result} />
-            ))}
+          <div className="flex items-center gap-3">
+            <Label htmlFor="search-mode" className="text-sm text-slate-600">
+              Internal only
+            </Label>
+            <Switch id="search-mode" checked={searchEverywhere} onCheckedChange={setSearchEverywhere} />
+            <Label htmlFor="search-mode" className="text-sm text-slate-600">
+              Search everywhere
+            </Label>
           </div>
         </div>
-      )}
-    </div>
+
+        {/* Internal Results */}
+        {hasResults ? (
+          <div className="space-y-4">
+            {searchResults.map((result) => (
+              <SearchResultCard key={result.id} result={result} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <SearchX className="w-16 h-16 text-slate-300 mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">No results found for '{query}'</h2>
+            <p className="text-slate-500 mb-4">Try different keywords or search everywhere for external resources</p>
+          </div>
+        )}
+
+        {/* External Results Section */}
+        {searchEverywhere && externalResults.length > 0 && (
+          <div className="space-y-4 pt-8 border-t">
+            <h2 className="text-xl font-semibold text-slate-900">External Resources</h2>
+            <div className="space-y-3">
+              {externalResults.map((result) => (
+                <ExternalResultCard key={result.id} result={result} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </ProtectedRoute>
   )
 }

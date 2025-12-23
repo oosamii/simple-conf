@@ -10,26 +10,27 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/lib/contexts/auth-context"
+import { ApiError } from "@/lib/api/client"
+import { Department } from "@simpleconf/shared"
 
 const departments = [
-  { value: "frontend", label: "Frontend" },
-  { value: "backend", label: "Backend" },
-  { value: "flutter", label: "Flutter" },
-  { value: "infra", label: "Infrastructure" },
-  { value: "sales", label: "Sales" },
-  { value: "hr", label: "HR" },
-  { value: "management", label: "Management" },
+  { value: Department.FRONTEND, label: "Frontend" },
+  { value: Department.BACKEND, label: "Backend" },
+  { value: Department.SALES, label: "Sales" },
+  { value: Department.HR, label: "HR" },
+  { value: Department.PRODUCT, label: "Product" },
 ]
 
 export function RegisterForm() {
+  const { register } = useAuth()
   const [displayName, setDisplayName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [department, setDepartment] = useState("")
+  const [department, setDepartment] = useState<Department | "">("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [success, setSuccess] = useState(false)
 
   const [displayNameError, setDisplayNameError] = useState("")
   const [emailError, setEmailError] = useState("")
@@ -100,7 +101,6 @@ export function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    setSuccess(false)
 
     const displayNameValid = validateDisplayName(displayName)
     const emailValid = validateEmail(email)
@@ -113,29 +113,28 @@ export function RegisterForm() {
 
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Mock success
-    setSuccess(true)
-    setIsLoading(false)
-
-    // Simulate redirect after success
-    setTimeout(() => {
-      // In real app, this would redirect to login
-      console.log("Redirecting to login...")
-    }, 2000)
-  }
-
-  if (success) {
-    return (
-      <div className="space-y-6">
-        <Alert className="bg-green-50 border-green-200">
-          <AlertDescription className="text-green-800">Account created! Please log in.</AlertDescription>
-        </Alert>
-        <p className="text-center text-sm text-slate-600">Redirecting to login page...</p>
-      </div>
-    )
+    try {
+      await register({
+        email,
+        password,
+        displayName,
+        department: department as Department,
+      })
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === "CONFLICT") {
+          setError("An account with this email already exists")
+        } else if (err.code === "VALIDATION_ERROR") {
+          setError(err.message)
+        } else {
+          setError(err.message)
+        }
+      } else {
+        setError("An unexpected error occurred")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -234,7 +233,7 @@ export function RegisterForm() {
             <Select
               value={department}
               onValueChange={(value) => {
-                setDepartment(value)
+                setDepartment(value as Department)
                 if (departmentError) validateDepartment(value)
               }}
               disabled={isLoading}

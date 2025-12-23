@@ -1,4 +1,4 @@
-import { eq, isNull, sql } from "drizzle-orm";
+import { count, eq, isNull } from "drizzle-orm";
 import type { Database } from "../db/index.js";
 import {
   folders,
@@ -78,9 +78,7 @@ export class FolderRepository {
 
   async getDocumentCount(folderId: string): Promise<number> {
     const result = await this.db
-      .select({
-        count: sql<number>`count(*)`,
-      })
+      .select({ count: count() })
       .from(documents)
       .where(eq(documents.folderId, folderId));
 

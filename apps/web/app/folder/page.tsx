@@ -1,118 +1,193 @@
 "use client"
 
-import { useState } from "react"
-import { Plus } from "lucide-react"
+import { useState, useEffect, useCallback, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Plus, Loader2, AlertCircle, RefreshCw, Folder } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { FolderBreadcrumbs } from "@/components/folder/Breadcrumbs"
 import { DocumentList } from "@/components/folder/DocumentList"
 import { DocumentPreview } from "@/components/folder/DocumentPreview"
+import { ProtectedRoute } from "@/lib/components/protected-route"
+import { folderService } from "@/lib/api/services/folders"
+import type { GetFolderDetailResponse, DocumentSummary, FolderWithMeta } from "@simpleconf/shared"
 
-// Mock data
-const currentFolder = {
-  id: "pg-001",
-  name: "Payment Gateways",
-  path: ["Home", "Sales", "Payment Gateways"],
-  documentCount: 7,
-  isAccessible: true,
-}
+function FolderContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const folderId = searchParams.get("id")
 
-const documents = [
-  {
-    id: 1,
-    title: "Razorpay Integration Guide",
-    updatedAt: "2 days ago",
-    owner: "John Doe",
-    views: 234,
-    comments: 12,
-    preview:
-      "This guide covers the complete integration process for Razorpay payment gateway including API setup, webhook configuration, and testing procedures...",
-  },
-  {
-    id: 2,
-    title: "PhonePe Setup",
-    updatedAt: "1 week ago",
-    owner: "Jane Smith",
-    views: 89,
-    comments: 3,
-    preview:
-      "Step-by-step instructions for setting up PhonePe as a payment option in your application. Includes merchant account setup and SDK integration...",
-  },
-  {
-    id: 3,
-    title: "Stripe Configuration",
-    updatedAt: "3 days ago",
-    owner: "John Doe",
-    views: 156,
-    comments: 7,
-    preview:
-      "Complete guide to configuring Stripe payments with support for multiple currencies, subscription billing, and advanced fraud detection...",
-  },
-  {
-    id: 4,
-    title: "Payment Gateway Comparison",
-    updatedAt: "2 weeks ago",
-    owner: "Alex Chen",
-    views: 67,
-    comments: 5,
-    preview:
-      "Detailed comparison of various payment gateways including fees, features, supported countries, and integration complexity...",
-  },
-  {
-    id: 5,
-    title: "Refund Processing Guide",
-    updatedAt: "5 days ago",
-    owner: "Jane Smith",
-    views: 45,
-    comments: 2,
-    preview:
-      "Guidelines and procedures for handling refunds across different payment gateways with best practices for customer communication...",
-  },
-]
+  const [folderData, setFolderData] = useState<GetFolderDetailResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null)
 
-export default function FolderBrowsePage() {
-  const [selectedDocId, setSelectedDocId] = useState<number | null>(null)
+  const fetchFolderData = useCallback(async () => {
+    if (!folderId) {
+      setFolderData(null)
+      setIsLoading(false)
+      return
+    }
 
-  const selectedDoc = documents.find((doc) => doc.id === selectedDocId)
-  const hasWriteAccess = true // Mock - would come from auth
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await folderService.getFolderDetails(folderId)
+      setFolderData(response)
+    } catch (err) {
+      setError("Failed to load folder")
+      console.error("Failed to fetch folder details:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [folderId])
+
+  useEffect(() => {
+    fetchFolderData()
+    setSelectedDocId(null)
+  }, [fetchFolderData])
+
+  const handleNewDocument = () => {
+    if (folderId) {
+      router.push(`/editor?folderId=${folderId}`)
+    }
+  }
+
+  const handleDocumentOpen = (docId: string) => {
+    router.push(`/document?id=${docId}`)
+  }
+
+  const handleSubfolderClick = (subfolderId: string) => {
+    router.push(`/folder?id=${subfolderId}`)
+  }
+
+  const selectedDoc = folderData?.documents.find((doc) => doc.id === selectedDocId)
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <AlertCircle className="h-12 w-12 text-red-500" />
+        <p className="text-lg text-slate-600">{error}</p>
+        <Button
+          variant="outline"
+          onClick={fetchFolderData}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Retry
+        </Button>
+      </div>
+    )
+  }
+
+  // No folder selected - show root view
+  if (!folderId || !folderData) {
+    return (
+      <div className="space-y-6">
+        <FolderBreadcrumbs breadcrumbs={[]} />
+        <h1 className="text-2xl font-semibold">All Folders</h1>
+        <p className="text-slate-500">Select a folder from the sidebar to browse documents.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
       {/* Breadcrumbs */}
-      <FolderBreadcrumbs path={currentFolder.path} />
+      <FolderBreadcrumbs breadcrumbs={folderData.breadcrumbs} />
 
       {/* Folder Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold">{currentFolder.name}</h1>
-          <span className="text-sm text-slate-500">({currentFolder.documentCount} documents)</span>
+          <h1 className="text-2xl font-semibold">{folderData.folder.name}</h1>
+          <span className="text-sm text-slate-500">
+            ({folderData.documents.length} documents)
+          </span>
         </div>
-        {hasWriteAccess && (
-          <Button className="bg-[#2563EB] hover:bg-[#1d4ed8] focus-visible:ring-2 focus-visible:ring-[#2563EB]">
-            <Plus className="h-4 w-4 mr-2" />
-            New Document
-          </Button>
-        )}
+        <Button
+          onClick={handleNewDocument}
+          className="bg-[#2563EB] hover:bg-[#1d4ed8] focus-visible:ring-2 focus-visible:ring-[#2563EB]"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Document
+        </Button>
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex gap-6">
-        {/* Document List - 60% */}
-        <div className={`${selectedDoc ? "w-[60%]" : "w-full"} transition-all duration-300`}>
-          <DocumentList
-            documents={documents}
-            selectedId={selectedDocId}
-            onSelect={setSelectedDocId}
-            onOpen={(id) => console.log("[v0] Open document:", id)}
-          />
-        </div>
-
-        {/* Preview Panel - 40% */}
-        {selectedDoc && (
-          <div className="w-[40%]">
-            <DocumentPreview document={selectedDoc} onClose={() => setSelectedDocId(null)} />
+      {/* Subfolders */}
+      {folderData.subfolders.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-sm font-medium text-slate-700">Subfolders</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {folderData.subfolders.map((subfolder: FolderWithMeta) => (
+              <Card
+                key={subfolder.id}
+                className={`p-4 cursor-pointer hover:bg-slate-50 transition-colors ${
+                  !subfolder.isAccessible ? "opacity-60" : ""
+                }`}
+                onClick={() => subfolder.isAccessible && handleSubfolderClick(subfolder.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <Folder className="h-5 w-5 text-slate-400" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-900 truncate">{subfolder.name}</p>
+                    <p className="text-xs text-slate-500">{subfolder.documentCount} documents</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Documents */}
+      <div className="space-y-3">
+        <h2 className="text-sm font-medium text-slate-700">Documents</h2>
+        <div className="flex gap-6">
+          {/* Document List */}
+          <div className={`${selectedDoc ? "w-[60%]" : "w-full"} transition-all duration-300`}>
+            <DocumentList
+              documents={folderData.documents}
+              selectedId={selectedDocId}
+              onSelect={setSelectedDocId}
+              onOpen={handleDocumentOpen}
+            />
+          </div>
+
+          {/* Preview Panel */}
+          {selectedDoc && (
+            <div className="w-[40%]">
+              <DocumentPreview
+                document={selectedDoc}
+                onClose={() => setSelectedDocId(null)}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
+  )
+}
+
+export default function FolderBrowsePage() {
+  return (
+    <ProtectedRoute>
+      <Suspense fallback={
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      }>
+        <FolderContent />
+      </Suspense>
+    </ProtectedRoute>
   )
 }

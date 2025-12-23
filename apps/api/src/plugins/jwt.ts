@@ -1,11 +1,12 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyJwt from '@fastify/jwt';
+import type { Department } from '@simpleconf/shared';
 
 export interface JwtPayload {
   id: string;
   email: string;
-  department: string;
+  department: Department;
 }
 
 declare module '@fastify/jwt' {

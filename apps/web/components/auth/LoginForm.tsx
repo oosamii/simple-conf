@@ -1,81 +1,102 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Mail, Lock, Eye, EyeOff, Loader2, Info } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useState } from "react";
+import Link from "next/link";
+import { Mail, Lock, Eye, EyeOff, Loader2, Info } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useAuth } from "@/lib/contexts/auth-context";
+import { ApiError } from "@/lib/api/client";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
+  const { login } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const validateEmail = (value: string) => {
     if (!value) {
-      setEmailError("Email is required")
-      return false
+      setEmailError("Email is required");
+      return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      setEmailError("Please enter a valid email")
-      return false
+      setEmailError("Please enter a valid email");
+      return false;
     }
-    setEmailError("")
-    return true
-  }
+    setEmailError("");
+    return true;
+  };
 
   const validatePassword = (value: string) => {
     if (!value) {
-      setPasswordError("Password is required")
-      return false
+      setPasswordError("Password is required");
+      return false;
     }
     if (value.length < 8) {
-      setPasswordError("Password must be at least 8 characters")
-      return false
+      setPasswordError("Password must be at least 8 characters");
+      return false;
     }
-    setPasswordError("")
-    return true
-  }
+    setPasswordError("");
+    return true;
+  };
 
   const isFormValid = () => {
-    return email && password && !emailError && !passwordError
-  }
+    return email && password && !emailError && !passwordError;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
-    const emailValid = validateEmail(email)
-    const passwordValid = validatePassword(password)
+    const emailValid = validateEmail(email);
+    const passwordValid = validatePassword(password);
 
     if (!emailValid || !passwordValid) {
-      return
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-
-    // Mock error for demo
-    setError("Invalid email or password")
-    setIsLoading(false)
-  }
+    try {
+      await login(email, password);
+    } catch (err) {
+      if (err instanceof ApiError) {
+        if (err.code === "UNAUTHORIZED") {
+          setError("Invalid email or password");
+        } else if (err.code === "VALIDATION_ERROR") {
+          setError(err.message);
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("An unexpected error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-center">Welcome back</h2>
-        <p className="text-sm text-slate-500 text-center">Sign in to your account to continue</p>
+        <p className="text-sm text-slate-500 text-center">
+          Sign in to your account to continue
+        </p>
       </div>
 
       {error && (
@@ -84,7 +105,7 @@ export function LoginForm() {
         </Alert>
       )}
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
@@ -96,14 +117,16 @@ export function LoginForm() {
               className="pl-10"
               value={email}
               onChange={(e) => {
-                setEmail(e.target.value)
-                if (emailError) validateEmail(e.target.value)
+                setEmail(e.target.value);
+                if (emailError) validateEmail(e.target.value);
               }}
               onBlur={(e) => validateEmail(e.target.value)}
               disabled={isLoading}
             />
           </div>
-          {emailError && <p className="text-red-500 text-sm mt-1">{emailError}</p>}
+          {emailError && (
+            <p className="text-red-500 text-sm mt-1">{emailError}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -117,8 +140,8 @@ export function LoginForm() {
               className="pl-10 pr-10"
               value={password}
               onChange={(e) => {
-                setPassword(e.target.value)
-                if (passwordError) validatePassword(e.target.value)
+                setPassword(e.target.value);
+                if (passwordError) validatePassword(e.target.value);
               }}
               onBlur={(e) => validatePassword(e.target.value)}
               disabled={isLoading}
@@ -129,10 +152,16 @@ export function LoginForm() {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               disabled={isLoading}
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
             </button>
           </div>
-          {passwordError && <p className="text-red-500 text-sm mt-1">{passwordError}</p>}
+          {passwordError && (
+            <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+          )}
         </div>
 
         <div className="flex justify-end">
@@ -155,7 +184,11 @@ export function LoginForm() {
           </TooltipProvider>
         </div>
 
-        <Button type="submit" className="w-full" disabled={!isFormValid() || isLoading}>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={!isFormValid() || isLoading}
+        >
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -165,7 +198,7 @@ export function LoginForm() {
             "Login"
           )}
         </Button>
-      </div>
+      </form>
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
@@ -178,10 +211,13 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-slate-600">
         Don't have an account?{" "}
-        <Link href="/register" className="text-primary hover:underline font-medium">
+        <Link
+          href="/register"
+          className="text-primary hover:underline font-medium"
+        >
           Register
         </Link>
       </p>
-    </form>
-  )
+    </div>
+  );
 }

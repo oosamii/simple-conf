@@ -1,3 +1,5 @@
+import { PublicUser } from './user.js';
+
 export interface Document {
   id: string;
   title: string;
@@ -8,4 +10,22 @@ export interface Document {
   viewCount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface DocumentWithMeta extends Document {
+  commentCount: number;
+  createdByUser: PublicUser;
+  modifiedByUser: PublicUser | null;
+  folderPath: string;
+}
+
+export interface DocumentSummary {
+  id: string;
+  title: string;
+  folderId: string;
+  folderPath: string;
+  createdBy: PublicUser;
+  updatedAt: Date;
+  viewCount: number;
+  commentCount: number;
 }
