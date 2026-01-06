@@ -1,65 +1,38 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import type { DocumentWithMeta } from "@simpleconf/shared"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { EditorToolbar } from "./EditorToolbar"
 import { MarkdownEditor } from "./MarkdownEditor"
 import { EditorPreview } from "./EditorPreview"
 import { UnsavedChangesDialog } from "./UnsavedChangesDialog"
+import { documentService } from "@/lib/api/services"
 
-// Mock data - in real app, fetch from API based on URL params
-const existingDocument = {
-  id: 1,
-  title: "Razorpay Integration Guide",
-  content: `# Overview
-
-This guide covers the complete integration of Razorpay.
-
-## Prerequisites
-
-- Node.js 18+
-- Razorpay account
-
-## Installation
-
-\`\`\`bash
-npm install razorpay
-\`\`\`
-
-## Configuration
-
-Create a \`.env\` file with your credentials:
-
-\`\`\`env
-RAZORPAY_KEY_ID=your_key_id
-RAZORPAY_KEY_SECRET=your_key_secret
-\`\`\`
-
-## Basic Usage
-
-\`\`\`javascript
-const Razorpay = require('razorpay');
-
-const instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-\`\`\`
-`,
+interface DocumentEditorPageProps {
+  mode: "edit" | "create"
+  document?: DocumentWithMeta
+  folderId?: string
 }
 
-export function DocumentEditorPage() {
-  const [title, setTitle] = useState(existingDocument.title)
-  const [content, setContent] = useState(existingDocument.content)
-  const [originalTitle] = useState(existingDocument.title)
-  const [originalContent] = useState(existingDocument.content)
+export function DocumentEditorPage({ mode, document: initialDocument, folderId }: DocumentEditorPageProps) {
+  const router = useRouter()
+  const [title, setTitle] = useState(initialDocument?.title ?? "")
+  const [content, setContent] = useState(initialDocument?.content ?? "")
+  const [originalTitle] = useState(initialDocument?.title ?? "")
+  const [originalContent] = useState(initialDocument?.content ?? "")
   const [leftWidth, setLeftWidth] = useState(50)
   const [isDragging, setIsDragging] = useState(false)
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const hasUnsavedChanges = title !== originalTitle || content !== originalContent
-  const canSave = title.trim().length > 0 && hasUnsavedChanges
+  const canSave = mode === "create"
+    ? title.trim().length > 0
+    : title.trim().length > 0 && hasUnsavedChanges
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -87,25 +60,51 @@ export function DocumentEditorPage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [hasUnsavedChanges])
 
-  const handleSave = () => {
-    console.log("[v0] Saving document:", { title, content })
-    // In real app: await saveDocument({ id: existingDocument.id, title, content })
-    alert("Document saved successfully!")
+  const handleSave = async () => {
+    if (!canSave || isSaving) return
+
+    setIsSaving(true)
+    setSaveError(null)
+
+    try {
+      if (mode === "edit" && initialDocument) {
+        await documentService.updateDocument(initialDocument.id, { title, content })
+        router.push(`/document?id=${initialDocument.id}`)
+      } else if (mode === "create" && folderId) {
+        const response = await documentService.createDocument({
+          title,
+          content,
+          folderId,
+        })
+        router.push(`/document?id=${response.document.id}`)
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save document")
+      setIsSaving(false)
+    }
   }
 
   const handleCancel = () => {
     if (hasUnsavedChanges) {
       setShowUnsavedDialog(true)
     } else {
-      // In real app: router.back() or router.push('/folder')
-      console.log("[v0] Navigating back")
+      navigateBack()
+    }
+  }
+
+  const navigateBack = () => {
+    if (mode === "edit" && initialDocument) {
+      router.push(`/document?id=${initialDocument.id}`)
+    } else if (folderId) {
+      router.push(`/folder?id=${folderId}`)
+    } else {
+      router.push("/folder")
     }
   }
 
   const handleDiscard = () => {
     setShowUnsavedDialog(false)
-    // In real app: router.back() or router.push('/folder')
-    console.log("[v0] Discarding changes and navigating back")
+    navigateBack()
   }
 
   const handleMouseDown = () => {
@@ -169,21 +168,28 @@ export function DocumentEditorPage() {
     <div className="flex flex-col h-screen">
       {/* Header */}
       <div className="border-b bg-white px-4 py-3 flex items-center justify-between">
-        <Button variant="ghost" onClick={handleCancel}>
+        <Button variant="ghost" onClick={handleCancel} disabled={isSaving}>
           Cancel
         </Button>
 
         <div className="flex items-center gap-2">
           {hasUnsavedChanges && <div className="w-2 h-2 bg-yellow-500 rounded-full" title="Unsaved changes" />}
           <span className="text-sm font-medium text-slate-700">
-            {existingDocument.id ? `Edit: ${originalTitle}` : "New Document"}
+            {mode === "edit" ? `Edit: ${originalTitle}` : "New Document"}
           </span>
         </div>
 
-        <Button onClick={handleSave} disabled={!canSave}>
-          Save
+        <Button onClick={handleSave} disabled={!canSave || isSaving}>
+          {isSaving ? "Saving..." : "Save"}
         </Button>
       </div>
+
+      {/* Error message */}
+      {saveError && (
+        <div className="bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
 
       {/* Title Input */}
       <div className="border-b bg-white px-6 py-4">

@@ -1,75 +1,25 @@
 "use client"
 
 import { useState } from "react"
-import { Pencil } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Pencil, ChevronRight, Home } from "lucide-react"
+import type { DocumentWithMeta } from "@simpleconf/shared"
 import { Button } from "@/components/ui/button"
-import { Breadcrumbs } from "@/components/folder/Breadcrumbs"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { MetadataBar } from "./MetadataBar"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 import { CommentsSection } from "./CommentsSection"
+import { useAuth } from "@/lib/contexts/auth-context"
 
-const document = {
-  id: 1,
-  title: "Razorpay Integration Guide",
-  path: ["Home", "Sales", "Payment Gateways"],
-  content: `# Overview
-
-This guide covers the complete integration of Razorpay payment gateway for our e-commerce platform.
-
-## Prerequisites
-
-- Node.js 18+
-- Razorpay merchant account
-- API keys from Razorpay dashboard
-
-## Installation
-
-\`\`\`bash
-npm install razorpay
-\`\`\`
-
-## Basic Setup
-
-\`\`\`typescript
-import Razorpay from 'razorpay';
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-\`\`\`
-
-## Creating an Order
-
-| Field | Type | Required |
-|-------|------|----------|
-| amount | number | Yes |
-| currency | string | Yes |
-| receipt | string | No |
-
-## Error Handling
-
-Always wrap API calls in try-catch blocks to handle network failures and API errors gracefully.
-
-\`\`\`javascript
-try {
-  const order = await razorpay.orders.create({
-    amount: 50000,
-    currency: "INR",
-    receipt: "order_rcptid_11"
-  });
-  console.log(order);
-} catch (error) {
-  console.error('Error creating order:', error);
-}
-\`\`\`
-`,
-  createdBy: { name: "John Doe", avatar: "JD" },
-  modifiedBy: { name: "Jane Smith", avatar: "JS" },
-  updatedAt: "2 hours ago",
-  views: 234,
-  commentCount: 3,
-  isOwner: true,
+interface DocumentViewPageProps {
+  document: DocumentWithMeta
 }
 
 const initialComments = [
@@ -96,19 +46,60 @@ const initialComments = [
   },
 ]
 
-export function DocumentViewPage() {
+export function DocumentViewPage({ document }: DocumentViewPageProps) {
+  const router = useRouter()
+  const { user } = useAuth()
   const [comments, setComments] = useState(initialComments)
+
+  const isOwner = user?.id === document.createdBy
+  const folderPathParts = document.folderPath
+    ? document.folderPath.split(" / ")
+    : []
+
+  const handleEdit = () => {
+    router.push(`/editor?id=${document.id}`)
+  }
 
   return (
     <div className="space-y-6">
       {/* Breadcrumb navigation */}
-      <Breadcrumbs path={[...document.path, document.title]} />
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink
+              href="/folder"
+              className="hover:text-[#2563EB] focus-visible:ring-2 focus-visible:ring-[#2563EB] rounded flex items-center gap-1"
+            >
+              <Home className="h-4 w-4" />
+              <span>Home</span>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          {folderPathParts.map((part, index) => (
+            <div key={index} className="flex items-center">
+              <BreadcrumbSeparator>
+                <ChevronRight className="h-4 w-4" />
+              </BreadcrumbSeparator>
+              <BreadcrumbItem>
+                <BreadcrumbPage>{part}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </div>
+          ))}
+          <div className="flex items-center">
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-4 w-4" />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage className="font-semibold">{document.title}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </div>
+        </BreadcrumbList>
+      </Breadcrumb>
 
       {/* Document header */}
       <div className="flex items-start justify-between gap-4">
         <h1 className="text-3xl font-bold text-slate-900">{document.title}</h1>
-        {document.isOwner && (
-          <Button variant="outline" size="sm">
+        {isOwner && (
+          <Button variant="outline" size="sm" onClick={handleEdit}>
             <Pencil className="h-4 w-4 mr-2" />
             Edit
           </Button>
@@ -117,11 +108,11 @@ export function DocumentViewPage() {
 
       {/* Metadata bar */}
       <MetadataBar
-        createdBy={document.createdBy}
-        modifiedBy={document.modifiedBy}
+        createdBy={document.createdByUser}
+        modifiedBy={document.modifiedByUser}
         updatedAt={document.updatedAt}
-        views={document.views}
-        commentCount={comments.length}
+        views={document.viewCount}
+        commentCount={document.commentCount}
       />
 
       {/* Markdown content */}

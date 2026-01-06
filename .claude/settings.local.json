@@ -16,7 +16,9 @@
       "Bash(ls:*)",
       "Bash(pnpm test:*)",
       "Bash(pnpm vitest run:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(pnpm --filter @simpleconf/web exec tsc:*)",
+      "Bash(pnpm --filter @simpleconf/shared exec tsc:*)"
     ]
   }
 }
