@@ -3,7 +3,7 @@ echo "Deploying Frontend..."
 cd /home/simple-conf
 git pull origin master
 cd /home/simple-conf/apps/web
-npm install
+pnpm install
 npm run build
 systemctl restart simple
 echo "Frontend Deployed Successfully."
@@ -13,7 +13,7 @@ echo "Deploying Backend..."
 # Add deployment commands here
 cd /home/simple-conf/apps/api
 git pull origin master
-npm install
+pnpm install
 npm run dev
 systemctl restart simplebackend
 echo "Backend Deployed Successfully."
