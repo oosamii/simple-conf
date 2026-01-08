@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { LogOut, User } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { LogOut, User } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,9 +9,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { useAuth } from "@/lib/contexts/auth-context"
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/contexts/auth-context";
+import { useRouter } from "next/navigation";
 
 function getInitials(name: string): string {
   return name
@@ -19,18 +20,19 @@ function getInitials(name: string): string {
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }
 
 function formatDepartment(department: string): string {
-  return department.charAt(0).toUpperCase() + department.slice(1)
+  return department.charAt(0).toUpperCase() + department.slice(1);
 }
 
 export function UserMenu() {
-  const { user, logout } = useAuth()
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -45,9 +47,13 @@ export function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.displayName}</p>
+            <p className="text-sm font-medium leading-none">
+              {user.displayName}
+            </p>
             <div className="flex items-center gap-2">
-              <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
             </div>
             <Badge variant="secondary" className="w-fit mt-1 text-xs">
               {formatDepartment(user.department)}
@@ -55,7 +61,10 @@ export function UserMenu() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="cursor-pointer focus:bg-accent">
+        <DropdownMenuItem
+          onClick={() => router.push("/profile")}
+          className="cursor-pointer focus:bg-accent"
+        >
           <User className="mr-2 h-4 w-4" />
           <span>Profile</span>
         </DropdownMenuItem>
@@ -68,5 +77,5 @@ export function UserMenu() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

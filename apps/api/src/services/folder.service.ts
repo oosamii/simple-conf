@@ -29,9 +29,7 @@ export class FolderService {
       }))
     );
 
-    const countMap = new Map(
-      folderCounts.map((fc) => [fc.folderId, fc.count])
-    );
+    const countMap = new Map(folderCounts.map((fc) => [fc.folderId, fc.count]));
 
     // Build tree structure
     const folderMap = new Map<string, FolderTreeNode>();
@@ -105,10 +103,14 @@ export class FolderService {
       title: doc.title,
       folderId: doc.folderId,
       folderPath: folder.name,
-      createdBy: { id: doc.createdBy, displayName: "", department: userDepartment },
+      createdBy: {
+        id: doc.createdBy,
+        displayName: "",
+        department: userDepartment,
+      },
       updatedAt: doc.updatedAt,
       viewCount: doc.viewCount,
-      commentCount: 0,
+      commentCount: doc.commentCount,
     }));
 
     return {

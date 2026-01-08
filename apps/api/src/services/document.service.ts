@@ -1,5 +1,9 @@
 import type { FastifyInstance } from "fastify";
-import type { Document, DocumentWithMeta, Department } from "@simpleconf/shared";
+import type {
+  Document,
+  DocumentWithMeta,
+  Department,
+} from "@simpleconf/shared";
 import { DocumentRepository } from "../repositories/document.repository.js";
 import { FolderRepository } from "../repositories/folder.repository.js";
 
@@ -123,5 +127,32 @@ export class DocumentService {
   ): boolean {
     if (folder.visibility === "public") return true;
     return folder.department === userDepartment;
+  }
+
+  async recordView(
+    documentId: string,
+    userId: string,
+    userDepartment: Department
+  ): Promise<number> {
+    // 1) Ensure doc exists + user has access (reuse existing logic)
+    const document = await this.getDocument(documentId, userDepartment);
+
+    // 2) Try to insert unique view (per user lifetime)
+    const inserted = await this.documentRepository.insertViewIfNotExists(
+      documentId,
+      userId
+    );
+
+    // 3) If inserted, increment view_count
+    if (inserted) {
+      const newCount = await this.documentRepository.incrementViewCount(
+        documentId
+      );
+      return newCount;
+    }
+
+    // 4) If already viewed, return current view_count
+    // (document.viewCount is in DocumentWithMeta already)
+    return document.viewCount;
   }
 }

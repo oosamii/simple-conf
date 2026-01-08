@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Pencil, ChevronRight, Home } from "lucide-react"
-import type { DocumentWithMeta } from "@simpleconf/shared"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Pencil, ChevronRight, Home } from "lucide-react";
+import type { DocumentWithMeta } from "@simpleconf/shared";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,14 +12,41 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { MetadataBar } from "./MetadataBar"
-import { MarkdownRenderer } from "./MarkdownRenderer"
-import { CommentsSection } from "./CommentsSection"
-import { useAuth } from "@/lib/contexts/auth-context"
+} from "@/components/ui/breadcrumb";
+import { MetadataBar } from "./MetadataBar";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { CommentsSection } from "./CommentsSection";
+import { useAuth } from "@/lib/contexts/auth-context";
+import { commentsService, documentService } from "@/lib/api/services";
 
 interface DocumentViewPageProps {
-  document: DocumentWithMeta
+  document: DocumentWithMeta;
+}
+
+interface UIComment {
+  id: string;
+  author: { name: string; avatar: string };
+  content: string;
+  timestamp: string;
+  isAuthor: boolean;
+}
+
+function mapCommentToUI(comment: any, currentUserId?: string) {
+  return {
+    id: comment.id,
+    author: {
+      name: comment.createdByUser.displayName,
+      avatar: comment.createdByUser.displayName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase(),
+    },
+    content: comment.content,
+    timestamp: new Date(comment.createdAt).toLocaleString(),
+    isAuthor: comment.createdBy === currentUserId,
+  };
 }
 
 const initialComments = [
@@ -44,24 +71,43 @@ const initialComments = [
     timestamp: "5 hours ago",
     isAuthor: true,
   },
-]
+];
 
 export function DocumentViewPage({ document }: DocumentViewPageProps) {
-  const router = useRouter()
-  const { user } = useAuth()
-  const [comments, setComments] = useState(initialComments)
+  const router = useRouter();
+  const { user } = useAuth();
+  const [comments, setComments] = useState<UIComment[]>([]);
 
-  const isOwner = user?.id === document.createdBy
+  useEffect(() => {
+    if (!document?.id) return;
+
+    const fetchComments = async () => {
+      try {
+        const res = await commentsService.listComments(document.id, 1, 50);
+        const uiComments = res.comments.map((c: any) =>
+          mapCommentToUI(c, user?.id)
+        );
+
+        setComments(uiComments);
+      } catch (err) {
+        console.error("Failed to load comments", err);
+      }
+    };
+
+    fetchComments();
+  }, [document?.id, user?.id]);
+
+  const isOwner = user?.id === document.createdBy;
   const folderPathParts = document.folderPath
     ? document.folderPath.split(" / ")
-    : []
+    : [];
 
   const handleEdit = () => {
-    router.push(`/editor?id=${document.id}`)
-  }
+    router.push(`/editor?id=${document.id}`);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-2 sm:p-6">
       {/* Breadcrumb navigation */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -89,7 +135,9 @@ export function DocumentViewPage({ document }: DocumentViewPageProps) {
               <ChevronRight className="h-4 w-4" />
             </BreadcrumbSeparator>
             <BreadcrumbItem>
-              <BreadcrumbPage className="font-semibold">{document.title}</BreadcrumbPage>
+              <BreadcrumbPage className="font-semibold">
+                {document.title}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </div>
         </BreadcrumbList>
@@ -122,8 +170,13 @@ export function DocumentViewPage({ document }: DocumentViewPageProps) {
 
       {/* Comments section */}
       <div className="mt-12 pt-8 border-t border-slate-200">
-        <CommentsSection comments={comments} />
+        {/* <CommentsSection comments={comments} /> */}
+        <CommentsSection
+          documentId={document.id}
+          comments={comments}
+          setComments={setComments}
+        />
       </div>
     </div>
-  )
+  );
 }

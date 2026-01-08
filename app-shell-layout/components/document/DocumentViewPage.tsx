@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Breadcrumbs } from "@/components/folder/Breadcrumbs"
-import { MetadataBar } from "./MetadataBar"
-import { MarkdownRenderer } from "./MarkdownRenderer"
-import { CommentsSection } from "./CommentsSection"
+import { useState } from "react";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Breadcrumbs } from "@/components/folder/Breadcrumbs";
+import { MetadataBar } from "./MetadataBar";
+import { MarkdownRenderer } from "./MarkdownRenderer";
+import { CommentsSection } from "./CommentsSection";
 
 const document = {
   id: 1,
@@ -70,7 +70,7 @@ try {
   views: 234,
   commentCount: 3,
   isOwner: true,
-}
+};
 
 const initialComments = [
   {
@@ -94,10 +94,10 @@ const initialComments = [
     timestamp: "5 hours ago",
     isAuthor: true,
   },
-]
+];
 
 export function DocumentViewPage() {
-  const [comments, setComments] = useState(initialComments)
+  const [comments, setComments] = useState(initialComments);
 
   return (
     <div className="space-y-6">
@@ -134,5 +134,5 @@ export function DocumentViewPage() {
         <CommentsSection comments={comments} />
       </div>
     </div>
-  )
+  );
 }

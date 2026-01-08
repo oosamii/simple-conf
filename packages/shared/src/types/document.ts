@@ -1,4 +1,4 @@
-import { PublicUser } from './user.js';
+import { Department, PublicUser } from "./user.js";
 
 export interface Document {
   id: string;
@@ -10,6 +10,9 @@ export interface Document {
   viewCount: number;
   createdAt: Date;
   updatedAt: Date;
+  // ✅ NEW
+  commentCount: number;
+  createdByUser?: PublicUser; 
 }
 
 export interface DocumentWithMeta extends Document {

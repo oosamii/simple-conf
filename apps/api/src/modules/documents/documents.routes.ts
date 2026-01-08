@@ -124,7 +124,10 @@ export async function documentsRoutes(fastify: FastifyInstance): Promise<void> {
     "/documents/:id",
     { preHandler: [authenticate] },
     async (
-      request: FastifyRequest<{ Params: { id: string }; Body: UpdateDocumentInput }>,
+      request: FastifyRequest<{
+        Params: { id: string };
+        Body: UpdateDocumentInput;
+      }>,
       reply: FastifyReply
     ) => {
       const validation = updateDocumentSchema.safeParse(request.body);
@@ -187,7 +190,10 @@ export async function documentsRoutes(fastify: FastifyInstance): Promise<void> {
       reply: FastifyReply
     ) => {
       try {
-        await documentService.deleteDocument(request.params.id, request.user.id);
+        await documentService.deleteDocument(
+          request.params.id,
+          request.user.id
+        );
         return reply.send({ success: true });
       } catch (err) {
         const error = err as Error & { code?: string };
@@ -205,6 +211,39 @@ export async function documentsRoutes(fastify: FastifyInstance): Promise<void> {
               code: "FORBIDDEN",
               message: error.message,
             },
+          });
+        }
+        throw err;
+      }
+    }
+  );
+
+  // POST /documents/:id/view - Count unique view (per user lifetime)
+  fastify.post<{
+    Params: { id: string };
+    Reply: { viewCount: number } | ApiErrorResponse;
+  }>(
+    "/documents/:id/view",
+    { preHandler: [authenticate] },
+    async (request, reply) => {
+      try {
+        const viewCount = await documentService.recordView(
+          request.params.id,
+          request.user.id,
+          request.user.department
+        );
+
+        return reply.send({ viewCount });
+      } catch (err) {
+        const error = err as Error & { code?: string };
+        if (error.code === "NOT_FOUND") {
+          return reply.status(404).send({
+            error: { code: "NOT_FOUND", message: error.message },
+          });
+        }
+        if (error.code === "FORBIDDEN") {
+          return reply.status(403).send({
+            error: { code: "FORBIDDEN", message: error.message },
           });
         }
         throw err;
