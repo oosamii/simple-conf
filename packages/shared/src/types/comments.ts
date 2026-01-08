@@ -1,10 +1,4 @@
-import type { Department, PublicUser } from "./user"; // adjust path if needed
-
-// export interface PublicUser {
-//   id: string;
-//   displayName: string;
-//   department: Department;
-// }
+import type { Department, PublicUser } from "./user";
 
 export interface Comment {
   id: string;
@@ -30,18 +24,6 @@ export interface CreateCommentInput {
 
 export interface UpdateCommentInput {
   content: string;
-}
-
-export interface CreateCommentResponse {
-  comment: CommentWithUser;
-}
-
-export interface UpdateCommentResponse {
-  comment: CommentWithUser;
-}
-
-export interface ListCommentsResponse {
-  comments: CommentWithUser[];
 }
 
 export interface DocumentViewResponse {

@@ -1,9 +1,9 @@
-import type {
+import {
   CreateCommentInput,
-  UpdateCommentInput,
   CreateCommentResponse,
-  UpdateCommentResponse,
   ListCommentsResponse,
+  UpdateCommentInput,
+  UpdateCommentResponse,
 } from "@simpleconf/shared";
 import { apiClient } from "../client";
 
@@ -38,9 +38,15 @@ export const commentsService = {
     );
   },
 
+  // async deleteComment(commentId: string): Promise<{ success: boolean }> {
+  //   return apiClient.delete<{ success: boolean }>(`/api/comments/${commentId}`);
+  // },
   async deleteComment(commentId: string): Promise<{ success: boolean }> {
     return apiClient.delete<{ success: boolean }>(
-      `/api/comments/${commentId}`
+      `/api/comments/${commentId}`,
+      {
+        body: JSON.stringify({ ok: true }),
+      }
     );
   },
 };

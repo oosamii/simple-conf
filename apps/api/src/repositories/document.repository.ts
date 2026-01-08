@@ -40,19 +40,6 @@ function mapToDocument(record: DocumentRecord): Document {
 export class DocumentRepository {
   constructor(private db: Database) {}
 
-  // async findById(id: string): Promise<Document | null> {
-  //   const result = await this.db
-  //     .select()
-  //     .from(documents)
-  //     .where(eq(documents.id, id))
-  //     .limit(1);
-
-  //   if (result.length === 0) {
-  //     return null;
-  //   }
-  //   return mapToDocument(result[0]);
-  // }
-
   async findById(id: string): Promise<Document | null> {
     const result = await this.db
       .select({
@@ -97,34 +84,23 @@ export class DocumentRepository {
     };
   }
 
-  // async findByFolderId(folderId: string): Promise<Document[]> {
-  //   const results = await this.db
-  //     .select()
-  //     .from(documents)
-  //     .where(eq(documents.folderId, folderId));
-  //   return results.map(mapToDocument);
-  // }
-
   async findByFolderId(folderId: string): Promise<Document[]> {
     const results = await this.db
       .select({
-        // ✅ required Document fields
         id: documents.id,
         title: documents.title,
-        content: documents.content, // ✅ add
+        content: documents.content,
         folderId: documents.folderId,
-        createdBy: documents.createdBy, // ✅ add
-        modifiedBy: documents.modifiedBy, // ✅ add
+        createdBy: documents.createdBy,
+        modifiedBy: documents.modifiedBy,
         viewCount: documents.viewCount,
         createdAt: documents.createdAt,
         updatedAt: documents.updatedAt,
 
-        // ✅ user meta (optional in Document)
         createdByUserId: users.id,
         createdByUserName: users.displayName,
         createdByUserDept: users.department,
 
-        // ✅ comment count
         commentCount: sql<number>`
         (
           select count(*)
@@ -149,7 +125,6 @@ export class DocumentRepository {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       commentCount: Number(row.commentCount) || 0,
-
       createdByUser: {
         id: row.createdByUserId,
         displayName: row.createdByUserName,

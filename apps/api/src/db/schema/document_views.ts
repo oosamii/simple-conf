@@ -21,9 +21,7 @@ export const documentViews = pgTable(
       .notNull(),
   },
   (table) => [
-    // ✅ one view per user per document (lifetime)
     unique("uniq_document_views_lifetime").on(table.documentId, table.userId),
-
     index("idx_document_views_document").on(table.documentId),
     index("idx_document_views_user").on(table.userId),
     index("idx_document_views_created").on(table.createdAt),

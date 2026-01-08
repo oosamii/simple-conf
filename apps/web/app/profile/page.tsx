@@ -1,4 +1,4 @@
-// app/settings/profile/page.tsx
+// app/profile/page.tsx
 "use client";
 
 import Link from "next/link";
@@ -141,7 +141,6 @@ export default function ProfilePage() {
           <CardContent className="p-6 sm:p-8">
             {/* Header */}
             <div className="space-y-4">
-              {/* Top row: Back button and Edit button */}
               <div className="flex items-center justify-between">
                 <Button
                   variant="ghost"
@@ -157,7 +156,6 @@ export default function ProfilePage() {
                 </Button>
               </div>
 
-              {/* Profile section */}
               <div className="flex gap-4 items-start">
                 <Avatar className="h-16 w-16 sm:h-20 sm:w-20 ring-2 ring-muted shrink-0">
                   <AvatarImage src={curUser.avatarUrl} alt={curUser.name} />

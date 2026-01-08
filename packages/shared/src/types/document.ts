@@ -12,7 +12,11 @@ export interface Document {
   updatedAt: Date;
   // ✅ NEW
   commentCount: number;
-  createdByUser?: PublicUser; 
+  createdByUser?: {
+    id: string;
+    displayName: string;
+    department: Department;
+  };
 }
 
 export interface DocumentWithMeta extends Document {
@@ -27,8 +31,8 @@ export interface DocumentSummary {
   title: string;
   folderId: string;
   folderPath: string;
-  createdBy: PublicUser;
   updatedAt: Date;
   viewCount: number;
   commentCount: number;
+  createdByUser: PublicUser;
 }

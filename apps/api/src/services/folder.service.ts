@@ -103,11 +103,7 @@ export class FolderService {
       title: doc.title,
       folderId: doc.folderId,
       folderPath: folder.name,
-      createdBy: {
-        id: doc.createdBy,
-        displayName: "",
-        department: userDepartment,
-      },
+      createdByUser: doc.createdByUser!,
       updatedAt: doc.updatedAt,
       viewCount: doc.viewCount,
       commentCount: doc.commentCount,

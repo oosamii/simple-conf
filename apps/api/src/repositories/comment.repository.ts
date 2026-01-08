@@ -1,7 +1,6 @@
 import { Database } from "../db";
-import { comments, users } from "../db/schema"; // adjust exports
+import { comments, users } from "../db/schema";
 import { eq, and, isNull, desc } from "drizzle-orm";
-import type { Department } from "@simpleconf/shared";
 
 export type CommentRow = typeof comments.$inferSelect;
 
@@ -11,7 +10,6 @@ function mapComment(record: CommentRow) {
     documentId: record.documentId,
     content: record.content,
     createdBy: record.createdBy,
-    parentCommentId: record.parentCommentId ?? null,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
     deletedAt: record.deletedAt ?? null,
@@ -33,32 +31,11 @@ export class CommentRepository {
         documentId: data.documentId,
         content: data.content,
         createdBy: data.createdBy,
-        parentCommentId: data.parentCommentId ?? null,
       })
       .returning();
 
     return mapComment(result[0]);
   }
-
-  // async listByDocumentId(
-  //   documentId: string,
-  //   opts: { page: number; limit: number }
-  // ) {
-  //   const offset = (opts.page - 1) * opts.limit;
-
-  //   // return only non-deleted comments
-  //   const rows = await this.db
-  //     .select()
-  //     .from(comments)
-  //     .where(
-  //       and(eq(comments.documentId, documentId), isNull(comments.deletedAt))
-  //     )
-  //     .orderBy(desc(comments.createdAt))
-  //     .limit(opts.limit)
-  //     .offset(offset);
-
-  //   return rows.map(mapComment);
-  // }
 
   async listByDocumentId(
     documentId: string,
