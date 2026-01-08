@@ -50,7 +50,7 @@ function InfoItem({
             {value}
           </Link>
         ) : (
-          <p className="text-sm text-foreground font-medium break-words">
+          <p className="text-sm text-foreground font-medium wrap-break-word">
             {value}
           </p>
         )}
@@ -126,7 +126,7 @@ export default function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-gradient-to-br from-muted/30 via-background to-muted/20">
+    <div className="min-h-[calc(100vh-64px)] bg-linear-to-br from-muted/30 via-background to-muted/20">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 py-6 sm:py-8">
         {/* Breadcrumb */}
         <div className="mb-6 flex items-center gap-2 text-sm text-muted-foreground">
