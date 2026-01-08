@@ -8,6 +8,13 @@
       "when": 1766123926269,
       "tag": "0000_sad_the_fury",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767788135665,
+      "tag": "0001_mature_richard_fisk",
+      "breakpoints": true
     }
   ]
 }

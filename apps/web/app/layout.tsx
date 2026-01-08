@@ -1,12 +1,13 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { Geist_Mono } from "next/font/google"
-import { AuthProvider } from "@/lib/contexts/auth-context"
-import "./globals.css"
+import type React from "react";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/lib/contexts/auth-context";
+import "./globals.css";
+import { Toaster } from "sonner";
 
-const _inter = Inter({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
+const _inter = Inter({ subsets: ["latin"] });
+const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "SimpleConf - Internal Knowledge Base",
@@ -29,18 +30,20 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
       <body className={`font-sans antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          {children} <Toaster richColors position="top-right" />
+        </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

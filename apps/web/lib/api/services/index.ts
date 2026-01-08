@@ -1,6 +1,7 @@
-export { authService } from './auth';
-export type { LoginInput, RegisterInput } from './auth';
+export { authService } from "./auth";
+export type { LoginInput, RegisterInput } from "./auth";
 
-export { folderService } from './folders';
+export { folderService } from "./folders";
 
-export { documentService } from './documents';
+export { documentService } from "./documents";
+export { commentsService } from "./comments";

@@ -1,6 +1,7 @@
-import type { User } from './user';
-import type { FolderTreeNode, FolderDetailResponse, Folder } from './folder';
-import type { Document, DocumentWithMeta } from './document';
+import type { User } from "./user";
+import type { FolderTreeNode, FolderDetailResponse, Folder } from "./folder";
+import type { Document, DocumentWithMeta } from "./document";
+import { CommentWithUser } from "./comments";
 
 export interface ApiErrorResponse {
   error: {
@@ -45,4 +46,20 @@ export interface CreateDocumentResponse {
 
 export interface UpdateDocumentResponse {
   document: Document;
+}
+
+export interface CommentResponse {
+  comment: CommentWithUser;
+}
+
+export interface CreateCommentResponse {
+  comment: CommentWithUser;
+}
+
+export interface UpdateCommentResponse {
+  comment: CommentWithUser;
+}
+
+export interface ListCommentsResponse {
+  comments: CommentWithUser[];
 }
